@@ -11,6 +11,8 @@ import re
 import logging
 import time
 
+# Carregar variáveis do .env
+load_dotenv()
 
 # Configura o log de erros
 logging.basicConfig(
@@ -92,8 +94,8 @@ TELEGRAM_CHANNELS = carregar_canais_telegram()
 
 # Telegram Config
 
-API_ID = 20816109
-API_HASH = "0fbda742fa2955368f9f8f84c77b4c35"
+API_ID = int(os.getenv("telegram_api_id"))
+API_HASH = os.getenv("telegram_api_hash")
 
 # Criar o cliente do Telegram
 telegram_client = TelegramClient('sessao', API_ID, API_HASH)
@@ -104,9 +106,9 @@ canais_ativados = carregar_canais_ativados()
 # Configuração do bot do Discord
 intents = discord.Intents.all()
 intents.message_content = True
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', help_command=None, intents=intents)
 
-API_KEY = "AIzaSyCqJ71e1XBN35MZJH4U3iohJ6IQv6OuddQ"  # Substitua pela sua API Key real
+API_KEY = os.getenv("gemini_api_key")  # Substitua pela sua API Key real
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
@@ -120,7 +122,7 @@ CANAIS_TELEGRAM_PATH = "canais_telegram.json"
 
 # Verifica se o canal está autorizado a modificar os canais monitorados
 def autorizado(user_id):
-    return str(user_id) == "1034605908463976458"
+    return str(user_id) == "1034605908463976458" # id do ADM aqui
 
 
 @bot.command()
@@ -408,9 +410,29 @@ async def limpar_historico(ctx):
     else:
         await ctx.send("Não há histórico para limpar neste canal.")
 
+@bot.command()
+async def help(ctx):
+    """Mostra todos os comandos disponíveis do bot."""
+    embed = discord.Embed(
+        title="📖 Lista de Comandos",
+        description="Aqui estão os comandos que você pode usar:",
+        color=discord.Color.green()
+    )
 
-# Carregar variáveis do .env
-load_dotenv()
+    embed.add_field(name="`!interesse <palavra>`", value="Adiciona um interesse ao seu perfil.", inline=False)
+    embed.add_field(name="`!removerinteresse <palavra>`", value="Remove um interesse do seu perfil.", inline=False)
+    embed.add_field(name="`!meusinteresses`", value="Lista seus interesses salvos.", inline=False)
+    embed.add_field(name="`!ativarpromocoes`", value="Ativa ou desativa promoções no canal atual.", inline=False)
+    embed.add_field(name="`!adicionarcanal <@canal>`", value="(ADM) Adiciona canal do Telegram para monitorar.", inline=False)
+    embed.add_field(name="`!removercanal <@canal>`", value="(ADM) Remove canal do Telegram da lista.", inline=False)
+    embed.add_field(name="`!canaismonitorados`", value="(ADM) Lista os canais de Telegram monitorados.", inline=False)
+    embed.add_field(name="`!kickvc @user <tempo>`", value="Remove alguém do canal de voz após um tempo (ex: `30m`, `2h`).", inline=False)
+    embed.add_field(name="`!limpar_historico`", value="Limpa o histórico de conversa do Gemini no canal.", inline=False)
+    embed.add_field(name=f"Mencione o bot", value="Use `@{bot.user.name}` com uma pergunta para receber uma resposta com IA.", inline=False)
+
+    await ctx.send(embed=embed)
+
+
 
 # Testar se o token foi carregado
 token = os.getenv("discord_token")
