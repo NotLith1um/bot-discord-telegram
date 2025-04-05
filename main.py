@@ -10,7 +10,6 @@ import json
 import re
 import logging
 import time
-import sys
 
 
 # Configura o log de erros
@@ -22,9 +21,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-# Tempo do último evento
-last_message_time = time.time()
 
 # Limite de inatividade (em segundos)
 TIMEOUT = 300  # 5 minutos
@@ -309,15 +305,6 @@ async def handler(event):
     except Exception as e:
         logging.error("Erro ao processar mensagem", exc_info=True)
 
-# Watchdog
-async def watchdog():
-    global last_message_time
-    while True:
-        await asyncio.sleep(60)
-        if time.time() - last_message_time > TIMEOUT:
-            logging.error("Watchdog: inatividade detectada no Telegram, reiniciando o bot.")
-            os.execv(sys.executable, ['python'] + sys.argv)
-
 # ---------------------- Comandos gerais do discord ----------------------
 
 @bot.event
@@ -442,14 +429,12 @@ async def start_telegram():
     print("🔄 Iniciando conexão com o Telegram...")
     await telegram_client.start()
     print("✅ Telegram conectado!")
-    asyncio.create_task(watchdog())
     await telegram_client.run_until_disconnected()
 
 # Rodando ambos os clientes simultaneamente
 # Por este:
 async def main():
     await telegram_client.start()
-    asyncio.create_task(watchdog())
     print("✅ Telegram conectado!")
     await asyncio.gather(
         telegram_client.run_until_disconnected(),
