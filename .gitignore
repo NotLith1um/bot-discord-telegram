@@ -178,5 +178,4 @@ errors.log
 sessao.session*
 interesses.json
 canais_ativados.json
-canais_telegram.json
 characterai.py
